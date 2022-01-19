@@ -1,8 +1,13 @@
-from guizero import App, PushButton, Box
+from guizero import App, PushButton, Box, Text
+from datetime import datetime, timedelta
 import teslapy
 
-email = "elon@tesla.com"
+email = "elon@tesla.dk"
 vehicle_index = 0
+suspend_minutes = 30
+
+suspended_until = False
+vehicles = []
 
 def toogle_fullscreen():
   is_full = app.full_screen
@@ -15,15 +20,44 @@ def toogle_fullscreen():
 def exit_pressed():
   app.destroy()
 
+def suspend_pressed():
+  global suspend_minutes
+  global suspended_until
+  if suspended_until == False:
+    suspended_until = datetime.now() + timedelta(minutes=suspend_minutes)
+  else:
+    suspended_until = False
+    suspend_button.text = "Suspend"
+
 def update_ui():
   if summary == {}:
     return
+  global suspended_until
+  if suspended_until != False:
+    timediff = suspended_until - datetime.now()
+    if timediff.total_seconds() < 0:
+      suspended_until = False
+      suspend_button.text = "Suspend"
+    else:
+      suspend_button.text = str(timediff).split('.')[0]
+      offline.visible = False
+      sleeping.visible = False
+      awake.visible = False
+      charging.visible = False
+      suspended.visible = True
+      return
+    print(summary)
+    if 'display_name' in summary:
+      name_text.value = summary['display_name']
+    else:
+      print(summary)
   if summary['state'] == 'online':
     if vd != {} and vd['charge_state']['charging_state'] == 'Charging':
       offline.visible = False
       sleeping.visible = False
       awake.visible = False
       charging.visible = True
+      suspended.visible = False
 
       charging.text = 'Charging\n'
       charging.text += str(vd['charge_state']['battery_level']) + '%\n'
@@ -34,7 +68,8 @@ def update_ui():
       sleeping.visible = False
       awake.visible = True
       charging.visible = False
-
+      suspended.visible = False
+      sleeping.text = "Sleeping"
       awake.text = str(vd['charge_state']['battery_level']) + '%'
         
   elif summary['state'] == 'asleep':
@@ -42,27 +77,45 @@ def update_ui():
     sleeping.visible = True
     awake.visible = False
     charging.visible = False
+    suspended.visible = False
   else:
     offline.visible = True
     sleeping.visible = False
     awake.visible = False
     charging.visible = False
+    suspended.visible = False
 
 def update_data():
   with teslapy.Tesla(email) as tesla:
-    vehicles = tesla.vehicle_list()
+    global vehicles
+    if (vehicles == []):
+      vehicles = tesla.vehicle_list()
     global summary
+    global suspended_until
     summary = vehicles[vehicle_index].get_vehicle_summary()
-    if summary['state'] == 'online':
+    if summary['state'] == 'online' and suspended_until == False:
       global vd
       vd = vehicles[vehicle_index].get_vehicle_data()
     update_ui()
   return
 
 def sleeping_pressed():
+  sleeping.bg = "blue"
+  sleeping.text = "Wakey\n  wakey..."
+  app.update()
+  it_worked = True
   with teslapy.Tesla(email) as tesla:
-    vehicles = tesla.vehicle_list()
-    vehicles[vehicle_index].sync_wake_up()
+    try:
+      global vehicles
+      vehicles[vehicle_index].sync_wake_up(timeout=20)
+    except teslapy.VehicleError:
+      it_worked = False
+      sleeping.bg = "yellow"
+      sleeping.text = "Didn't\nwake up :("
+  if it_worked:
+    sleeping.bg = "yellow"
+    sleeping.text = "Sleeping"
+
 
 def awake_pressed():
   if summary['state'] != 'online':
@@ -90,11 +143,17 @@ toogle_fullscreen()
 
 menu = Box(app, layout="grid", width="fill")
 
-toogle = PushButton(menu, grid=[0,0], command=toogle_fullscreen, text="Toogle fullscreen", width="fill")
-toogle.text_size = 5
-exit_button = PushButton(menu, grid=[1,0], command=exit_pressed, text="Exit", width="fill")
-exit_button.text_size = 5
+suspend_button = PushButton(menu, grid=[0,0], command=suspend_pressed, text="Suspend", width="fill", align="right", padx=1, pady=1)
+suspend_button.text_size = 15
 
+toogle = PushButton(menu, grid=[1,0], command=toogle_fullscreen, text="Toogle fullscreen", width="fill", padx=1, pady=1)
+toogle.text_size = 15
+
+exit_button = PushButton(menu, grid=[2,0], command=exit_pressed, text="Exit", width="fill", padx=1, pady=1)
+exit_button.text_size = 15
+
+name_text = Text(menu, text="---", align="right", grid=[6,0])
+name_text.text_size = 15
 
 offline = PushButton(app, width="fill", height="fill", text="Offline")
 offline.bg = "red"
@@ -112,5 +171,9 @@ charging = PushButton(app, command=charging_pressed, width="fill", height="fill"
 charging.bg = "green"
 charging.text_size = text_size
 
+suspended = PushButton(app,  width="fill", height="fill", text="Suspended")
+suspended.bg = "grey"
+suspended.text_size = text_size
+update_data()
 app.display()
 

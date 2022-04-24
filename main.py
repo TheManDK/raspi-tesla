@@ -1,8 +1,9 @@
+import configparser
 from guizero import App, PushButton, Box, Text
 from datetime import datetime, timedelta
 import teslapy
 
-email = "elon@tesla.dk"
+email = ""
 vehicle_index = 0
 suspend_minutes = 30
 
@@ -30,6 +31,7 @@ def suspend_pressed():
     suspend_button.text = "Suspend"
 
 def update_ui():
+  global summary
   if summary == {}:
     return
   global suspended_until
@@ -46,11 +48,9 @@ def update_ui():
       charging.visible = False
       suspended.visible = True
       return
-    print(summary)
-    if 'display_name' in summary:
-      name_text.value = summary['display_name']
-    else:
-      print(summary)
+
+  if 'display_name' in summary:
+    name_text.text = summary['display_name']
   if summary['state'] == 'online':
     if vd != {} and vd['charge_state']['charging_state'] == 'Charging':
       offline.visible = False
@@ -70,6 +70,8 @@ def update_ui():
       charging.visible = False
       suspended.visible = False
       sleeping.text = "Sleeping"
+      if vd != {}:
+        sleeping.text += "\n" + str(vd['charge_state']['battery_level']) + '%'
       awake.text = str(vd['charge_state']['battery_level']) + '%'
         
   elif summary['state'] == 'asleep':
@@ -96,6 +98,7 @@ def update_data():
     if summary['state'] == 'online' and suspended_until == False:
       global vd
       vd = vehicles[vehicle_index].get_vehicle_data()
+      print(vd)
     update_ui()
   return
 
@@ -134,12 +137,19 @@ def charging_pressed():
     vehicles[vehicle_index].command('STOP_CHARGE')
     vehicles[vehicle_index].command('CHARGE_PORT_DOOR_OPEN')
 
+config = configparser.ConfigParser()
+config.read('settings.ini')
+email = config["DEFAULT"]["Email"]
+vechicle_index = config["DEFAULT"]["VehicleIndex"]
+suspend_minutes  = config["DEFAULT"]["SuspendMinutes"]
 summary = {}
 vd = {}
 text_size = 60
 app = App(title="Tesla app")
 app.repeat(1000, update_data)
 toogle_fullscreen()
+if (app.width > 1000):
+  toogle_fullscreen()
 
 menu = Box(app, layout="grid", width="fill")
 
@@ -152,8 +162,12 @@ toogle.text_size = 15
 exit_button = PushButton(menu, grid=[2,0], command=exit_pressed, text="Exit", width="fill", padx=1, pady=1)
 exit_button.text_size = 15
 
-name_text = Text(menu, text="---", align="right", grid=[6,0])
+name_text = PushButton(menu, text="---", align="right", grid=[6,0], padx=1, pady=1)
 name_text.text_size = 15
+
+
+
+
 
 offline = PushButton(app, width="fill", height="fill", text="Offline")
 offline.bg = "red"
@@ -165,7 +179,7 @@ sleeping.text_size = text_size
 
 awake = PushButton(app, command=awake_pressed, width="fill", height="fill", text="Awake")
 awake.bg = "blue"
-awake.text_size = text_size
+awake.text_size = text_size + 80
 
 charging = PushButton(app, command=charging_pressed, width="fill", height="fill", text="Charging")
 charging.bg = "green"

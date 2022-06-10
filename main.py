@@ -126,6 +126,7 @@ def awake_pressed():
   with teslapy.Tesla(email) as tesla:
     vehicles = tesla.vehicle_list()
     vehicles[vehicle_index].command('CHARGE_PORT_DOOR_OPEN')
+    app.info("Open", "Open sesame")
 
 
 
@@ -136,6 +137,7 @@ def charging_pressed():
     vehicles = tesla.vehicle_list()
     vehicles[vehicle_index].command('STOP_CHARGE')
     vehicles[vehicle_index].command('CHARGE_PORT_DOOR_OPEN')
+    app.info("Unlock", "Unlocked")
 
 config = configparser.ConfigParser()
 config.read('settings.ini')

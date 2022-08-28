@@ -146,7 +146,6 @@ def set_charging(amps):
     vehicles = tesla.vehicle_list()
     vehicles[vehicle_index].command('CHARGING_AMPS', charging_amps=amps)
     vehicles[vehicle_index].command('CHARGING_AMPS', charging_amps=amps)
-    app.info("Unlock", "Unlocked")
   return
 
 def set_charging1():

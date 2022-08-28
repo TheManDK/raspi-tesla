@@ -223,11 +223,11 @@ suspended.text_size = text_size
 amps = Box(app, layout="grid", width="fill", height=70)
 
 set_text_size = 15
-set1 = PushButton(amps, command=set_charging1, width="fill", height="fill", grid=[0,0], text="1", padx=30, pady=1)
-set2 = PushButton(amps, command=set_charging2, width="fill", height="fill", grid=[1,0], text="2", padx=30, pady=1)
-set3 = PushButton(amps, command=set_charging3, width="fill", height="fill", grid=[2,0], text="3", padx=30, pady=1)
-set4 = PushButton(amps, command=set_charging4, width="fill", height="fill", grid=[3,0], text="4", padx=30, pady=1)
-set5 = PushButton(amps, command=set_charging5, width="fill", height="fill", grid=[4,0], text="5", padx=30, pady=1)
+set1 = PushButton(amps, command=set_charging1, width="fill", height="fill", grid=[0,0], text="1", padx=35, pady=1)
+set2 = PushButton(amps, command=set_charging2, width="fill", height="fill", grid=[1,0], text="2", padx=35, pady=1)
+set3 = PushButton(amps, command=set_charging3, width="fill", height="fill", grid=[2,0], text="3", padx=35, pady=1)
+set4 = PushButton(amps, command=set_charging4, width="fill", height="fill", grid=[3,0], text="4", padx=35, pady=1)
+set5 = PushButton(amps, command=set_charging5, width="fill", height="fill", grid=[4,0], text="5", padx=35, pady=1)
 set1.text_size = set_text_size
 set2.text_size = set_text_size
 set3.text_size = set_text_size

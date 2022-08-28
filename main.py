@@ -98,7 +98,7 @@ def update_data():
     if summary['state'] == 'online' and suspended_until == False:
       global vd
       vd = vehicles[vehicle_index].get_vehicle_data()
-      print(vd)
+      #print(vd)
     update_ui()
   return
 
@@ -139,6 +139,36 @@ def charging_pressed():
     vehicles[vehicle_index].command('CHARGE_PORT_DOOR_OPEN')
     app.info("Unlock", "Unlocked")
 
+def set_charging(amps):
+  if summary['state'] != 'online':
+    return
+  with teslapy.Tesla(email) as tesla:
+    vehicles = tesla.vehicle_list()
+    vehicles[vehicle_index].command('CHARGING_AMPS', charging_amps=amps)
+    vehicles[vehicle_index].command('CHARGING_AMPS', charging_amps=amps)
+    app.info("Unlock", "Unlocked")
+  return
+
+def set_charging1():
+  set_charging(1)
+  return
+
+def set_charging2():
+  set_charging(2)
+  return
+
+def set_charging3():
+  set_charging(3)
+  return
+
+def set_charging4():
+  set_charging(4)
+  return
+
+def set_charging5():
+  set_charging(5)
+  return
+
 config = configparser.ConfigParser()
 config.read('settings.ini')
 email = config["DEFAULT"]["Email"]
@@ -146,7 +176,7 @@ vechicle_index = config["DEFAULT"]["VehicleIndex"]
 suspend_minutes  = config["DEFAULT"]["SuspendMinutes"]
 summary = {}
 vd = {}
-text_size = 60
+text_size = 50
 app = App(title="Tesla app")
 app.repeat(1000, update_data)
 toogle_fullscreen()
@@ -190,6 +220,21 @@ charging.text_size = text_size
 suspended = PushButton(app,  width="fill", height="fill", text="Suspended")
 suspended.bg = "grey"
 suspended.text_size = text_size
+
+amps = Box(app, layout="grid", width="fill", height=70)
+
+set_text_size = 15
+set1 = PushButton(amps, command=set_charging1, width="fill", height="fill", grid=[0,0], text="1", padx=20, pady=1)
+set2 = PushButton(amps, command=set_charging2, width="fill", height="fill", grid=[1,0], text="2", padx=20, pady=1)
+set3 = PushButton(amps, command=set_charging3, width="fill", height="fill", grid=[2,0], text="3", padx=20, pady=1)
+set4 = PushButton(amps, command=set_charging4, width="fill", height="fill", grid=[3,0], text="4", padx=20, pady=1)
+set5 = PushButton(amps, command=set_charging5, width="fill", height="fill", grid=[4,0], text="5", padx=20, pady=1)
+set1.text_size = set_text_size
+set2.text_size = set_text_size
+set3.text_size = set_text_size
+set4.text_size = set_text_size
+set5.text_size = set_text_size
+
 update_data()
 app.display()
 

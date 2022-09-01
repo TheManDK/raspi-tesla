@@ -82,6 +82,7 @@ def update_ui():
     suspended.visible = False
   else:
     offline.visible = True
+    offline.text = summary['state']
     sleeping.visible = False
     awake.visible = False
     charging.visible = False
